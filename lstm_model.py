@@ -11,6 +11,7 @@ import numpy as np
 torch.manual_seed(1234567890)
 np.random.seed(1234567890)
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class TrajPredictor(nn.Module):
     def __init__(self, pretrained_node_embeddings, hidden_size):
@@ -100,9 +101,9 @@ def train(model, optimizer, loss_fn, epochs=100, backward_model=False):
 
         for i in range(tr_s.no_training_batches(args_kdiverse.lstm_model_batch_size)):
             inputs, seq_lengths, targets = tr_s(i, args_kdiverse.lstm_model_batch_size)
-            inputs = torch.LongTensor(inputs)
-            seq_lengths = torch.LongTensor(seq_lengths)
-            targets = torch.LongTensor(targets)
+            inputs = torch.LongTensor(inputs).to(device)
+            seq_lengths = torch.LongTensor(seq_lengths).to(device)
+            targets = torch.LongTensor(targets).to(device)
             optimizer.zero_grad()
             output = model(inputs, seq_lengths)
             loss = loss_fn(model, output, targets)
@@ -122,17 +123,19 @@ def train(model, optimizer, loss_fn, epochs=100, backward_model=False):
                 torch.save(model.state_dict(),
                            "model_files/LSTM_net_1_b_" + data_generator.dat_suffix[data_generator.dat_ix])
 
-        print(
-            'Epoch: {}, Loss: {:.3f}'.format(epoch, training_loss))
+        if epoch % 100 == 0 or epoch == epochs -1:
+            print('Epoch: {}, Loss: {:.3f}'.format(epoch, training_loss))
 
 def get_forward_lstm_model(load_from_file=True):
     pretrained_embeddings = graph_embedding_kdiv.get_POI_embeddings(load_from_file=True)
-    pretrained_embeddings = torch.FloatTensor(pretrained_embeddings)
+    pretrained_embeddings = torch.FloatTensor(pretrained_embeddings).to(device)
     if (load_from_file == False):
-        trajpredictor_forward = TrajPredictor(pretrained_embeddings, args_kdiverse.lstm_model_hidden_size)
+        trajpredictor_forward = TrajPredictor(pretrained_embeddings, args_kdiverse.lstm_model_hidden_size).to(device)
         optimizer_forward = optim.Adam(trajpredictor_forward.parameters(), lr=0.001)
+        print("\nForward")
         train(trajpredictor_forward, optimizer_forward, loss_fn, epochs=500)
-    forward_lstm_model = TrajPredictor(pretrained_embeddings, args_kdiverse.lstm_model_hidden_size)
+        print("\n")
+    forward_lstm_model = TrajPredictor(pretrained_embeddings, args_kdiverse.lstm_model_hidden_size).to(device)
     fwd_model_state_dict = torch.load("model_files/LSTM_net_1_f_" + data_generator.dat_suffix[data_generator.dat_ix])
     forward_lstm_model.load_state_dict(fwd_model_state_dict)
 
@@ -141,14 +144,19 @@ def get_forward_lstm_model(load_from_file=True):
 
 def get_backward_lstm_model(load_from_file=True):
     pretrained_embeddings = graph_embedding_kdiv.get_POI_embeddings(load_from_file=True)
-    pretrained_embeddings = torch.FloatTensor(pretrained_embeddings)
+    pretrained_embeddings = torch.FloatTensor(pretrained_embeddings).to(device)
     if (load_from_file == False):
-        trajpredictor_backward = TrajPredictor(pretrained_embeddings, args_kdiverse.lstm_model_hidden_size)
+        trajpredictor_backward = TrajPredictor(pretrained_embeddings, args_kdiverse.lstm_model_hidden_size).to(device)
         optimizer_backward = optim.Adam(trajpredictor_backward.parameters(), lr=0.001)
+        print("\nBackward")
         train(trajpredictor_backward, optimizer_backward, loss_fn, epochs=500, backward_model=True)
-    backward_lstm_model = TrajPredictor(pretrained_embeddings, args_kdiverse.lstm_model_hidden_size)
+        print("\n")
+    backward_lstm_model = TrajPredictor(pretrained_embeddings, args_kdiverse.lstm_model_hidden_size).to(device)
     bwd_model_state_dict = torch.load("model_files/LSTM_net_1_b_" + data_generator.dat_suffix[data_generator.dat_ix])
     backward_lstm_model.load_state_dict(bwd_model_state_dict)
 
     return backward_lstm_model
 
+
+# get_forward_lstm_model(load_from_file=False)
+# get_backward_lstm_model(load_from_file=False)

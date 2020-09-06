@@ -10,6 +10,7 @@ import data_generator
 np.random.seed(1234567890)
 torch.manual_seed(1234567890)
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def preprocess_graph(adj, add_eye=True):
     for i in range(len(adj)):
@@ -83,11 +84,11 @@ def train_GAE_rmsLoss(adj_matrix, add_eye=True):
     else:
         adj_label = adj_train
 
-    adj_norm = torch.FloatTensor(adj_norm)
-    adj_label = torch.FloatTensor(adj_label)
-    features = torch.FloatTensor(features)
+    adj_norm = torch.FloatTensor(adj_norm).to(device)
+    adj_label = torch.FloatTensor(adj_label).to(device)
+    features = torch.FloatTensor(features).to(device)
 
-    model = GAE(adj_norm)
+    model = GAE(adj_norm).to(device)
 
     optimizer = torch.optim.Adadelta(model.parameters(), lr=args_kdiverse.ae_learning_rate)
 
@@ -106,7 +107,7 @@ def train_GAE_rmsLoss(adj_matrix, add_eye=True):
 
         train_rms_loss = get_rms_loss(A_pred, adj_label)
 
-        if epoch % 200 == 0:
+        if epoch % 20000 == 0 or epoch == args_kdiverse.ae_num_epoch-1:
             print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(loss.item()),
                   "train_rms_loss = ", "{:.5f}".format(train_rms_loss),
                   "time=", "{:.5f}".format(time.time() - t))
@@ -115,7 +116,7 @@ def train_GAE_rmsLoss(adj_matrix, add_eye=True):
 
     Z_final, A_pred_final = model(features)
 
-    return np.array(Z_final.detach().numpy())
+    return np.array(Z_final.cpu().detach().numpy())
 
 
 def train_GAE_BCELoss(adj_matrix):
@@ -129,11 +130,11 @@ def train_GAE_BCELoss(adj_matrix):
     features = np.eye(num_nodes, dtype=np.float)
     adj_label = adj_train
 
-    adj_norm = torch.FloatTensor(adj_norm)
-    adj_label = torch.FloatTensor(adj_label)
-    features = torch.FloatTensor(features)
+    adj_norm = torch.FloatTensor(adj_norm).to(device)
+    adj_label = torch.FloatTensor(adj_label).to(device)
+    features = torch.FloatTensor(features).to(device)
 
-    model = GAE(adj_norm)
+    model = GAE(adj_norm).to(device)
 
 
     optimizer = torch.optim.Adadelta(model.parameters(), lr=args_kdiverse.ae_learning_rate)
@@ -147,7 +148,7 @@ def train_GAE_BCELoss(adj_matrix):
         loss.backward()
         optimizer.step()
 
-        if epoch % 200 == 0:
+        if epoch % 5000 == 0 or epoch == args_kdiverse.ae_num_epoch - 1:
             print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(loss.item()))
 
     print("\n\n")
@@ -162,7 +163,7 @@ def train_GAE_BCELoss(adj_matrix):
     # conf = metrics.confusion_matrix(adj_orig, A_pred_final)
     # print(conf)
 
-    return np.array(Z_final.detach().numpy())
+    return np.array(Z_final.cpu().detach().numpy())
 
 
 def get_POI_embeddings(load_from_file=False):
@@ -182,7 +183,6 @@ def get_POI_embeddings(load_from_file=False):
         args_kdiverse.ae_learning_rate = 0.1
 
         Z_final_dist = train_GAE_rmsLoss(data_generator.poi_poi_distance_matrix_train_gae)
-
         Z_final_concat = np.concatenate([Z_final_dist, Z_final_cat], axis=1)
 
         np.save("model_files/POI_embedding_" + data_generator.dat_suffix[data_generator.dat_ix] + ".npy",
@@ -190,3 +190,5 @@ def get_POI_embeddings(load_from_file=False):
 
     Zb = np.load("model_files/POI_embedding_" + data_generator.dat_suffix[data_generator.dat_ix] + ".npy")
     return Zb
+
+#get_POI_embeddings(load_from_file=False)

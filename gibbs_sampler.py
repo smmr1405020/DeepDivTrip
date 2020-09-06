@@ -8,31 +8,32 @@ np.random.seed(1234567890)
 torch.manual_seed(1234567890)
 random.seed(1234567890)
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def get_model_probs(input_seq):
     input_seq_f = list(input_seq)
     input_seq_b = list(reversed(list(input_seq)))
 
     input_seq_length = [len(input_seq)]
-    input_seq_length = torch.LongTensor(input_seq_length)
+    input_seq_length = torch.LongTensor(input_seq_length).to(device)
 
     input_seq_batch_f = [input_seq_f]
     input_seq_batch_f = np.array(input_seq_batch_f)
     input_seq_batch_f = np.transpose(input_seq_batch_f)
-    input_seq_batch_f = torch.LongTensor(input_seq_batch_f)
+    input_seq_batch_f = torch.LongTensor(input_seq_batch_f).to(device)
 
     model_fwd = lstm_model.get_forward_lstm_model(load_from_file=True)
     output_prb_f = torch.softmax(model_fwd(input_seq_batch_f, input_seq_length), dim=-1)
-    output_prb_f = output_prb_f.detach().numpy()
+    output_prb_f = output_prb_f.cpu().detach().numpy()
 
     input_seq_batch_b = [input_seq_b]
     input_seq_batch_b = np.array(input_seq_batch_b)
     input_seq_batch_b = np.transpose(input_seq_batch_b)
-    input_seq_batch_b = torch.LongTensor(input_seq_batch_b)
+    input_seq_batch_b = torch.LongTensor(input_seq_batch_b).to(device)
 
     model_bwd = lstm_model.get_backward_lstm_model(load_from_file=True)
     output_prb_b = torch.softmax(model_bwd(input_seq_batch_b, input_seq_length), dim=-1)
-    output_prb_b = output_prb_b.detach().numpy()
+    output_prb_b = output_prb_b.cpu().detach().numpy()
 
     return output_prb_f, output_prb_b
 

@@ -7,7 +7,7 @@ import gibbs_sampler
 
 
 np.random.seed(1234567890)
-K = 4
+K = 3
 
 
 graph_embedding_kdiv.get_POI_embeddings(load_from_file=False)
@@ -56,18 +56,17 @@ for k, v in data_generator.test_data_dicts_vi[0].items():
 
     print("{}/{}".format(count , len(data_generator.test_data_dicts_vi[0])))
     count += 1
-    print([poi_start,poi_end])
-    print(all_traj)
+    # print([poi_start,poi_end])
+    # print(all_traj)
     likability_score_curr = metric.likability_score(v,all_traj)
     likability_score.append(likability_score_curr)
-    print(likability_score_curr)
+    # print(likability_score_curr)
     print("Avg. upto now: "+str(np.average(likability_score)))
     print("\n")
 
 
-print("Final Score: ")
+print("Final Score - With K = {}".format(K))
 print(np.average(likability_score))
-
 
 
 
