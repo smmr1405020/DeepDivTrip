@@ -350,7 +350,8 @@ def get_training_rawdata(batch_size=8):
     all_training_rawdata = []
     for k, v in training_data_dicts_vi[0].items():
         for i in range(len(v)):
-            all_training_rawdata.append(v[i])
+            if len(v[i]) < 50:
+                all_training_rawdata.append(v[i])
 
     np.random.shuffle(all_training_rawdata)
 
@@ -369,6 +370,7 @@ def get_training_data_for_KDiverse_Raw():
 
     POI_endpoints_dict = {}
 
+
     for i in range(len(trainT)):
         for path_length in range(3, len(trainT[i]) + 1):
             for j in range(0, len(trainT[i]) - path_length + 1):
@@ -383,8 +385,6 @@ def get_training_data_for_KDiverse_Raw():
                 return False
 
         return True
-
-    # print(len(trainT))
 
     for k, v in POI_endpoints_dict.items():
         v_new = list(v)
@@ -406,6 +406,7 @@ def get_training_data_for_KDiverse_Raw():
                             v_new.append(new_traj)
 
         POI_endpoints_dict[k] = v_new
+
 
     for k, v in POI_endpoints_dict.items():
         v_new = []
@@ -477,6 +478,16 @@ for i in range(len(vocab_to_int) - 3):
         dist = calc_dist_vec(poi_1_lon, poi_1_lat, poi_2_lon, poi_2_lat)
         poi_poi_distance_matrix[i][j] = np.round(dist, 2)
 
+poi_poi_distance_matrix_avg = np.average(poi_poi_distance_matrix)
+max_dist = 3 * poi_poi_distance_matrix_avg
+
+poi_poi_distance_matrix_old = poi_poi_distance_matrix.copy()
+
+for i in range (len(poi_poi_distance_matrix)):
+    for j in range(len(poi_poi_distance_matrix[i])):
+        poi_poi_distance_matrix[i][j] = min(max_dist,poi_poi_distance_matrix[i][j])
+
+print(np.sum(poi_poi_distance_matrix != poi_poi_distance_matrix_old))
 
 #############################################################################################
 
@@ -499,6 +510,7 @@ poi_poi_transition_matrix_train = POI_transition_matrix(training_data_dicts_vi[0
 
 expo_trans1 = np.log10(max(1, np.min(poi_poi_transition_matrix_train)))
 expo_trans2 = np.log10(np.max(poi_poi_transition_matrix_train))
+
 
 max_dist = np.max(poi_poi_distance_matrix)
 poi_poi_distance_matrix_train_gae = np.exp((max_dist - poi_poi_distance_matrix))
