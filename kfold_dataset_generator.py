@@ -4,12 +4,13 @@ import random
 import csv
 import os
 import glob
+import args_kdiverse
 
 random.seed(1234567890)
 np.random.seed(1234567890)
 
 dat_suffix = ['Osak', 'Glas', 'Edin', 'Toro', 'Melb','caliAdv', 'disHolly', 'disland', 'epcot', 'MagicK']
-dat_ix = 5
+dat_ix = args_kdiverse.dataset_index
 embedding_name = dat_suffix[dat_ix]
 
 poi_name = "poi-" + dat_suffix[dat_ix] + ".csv"  # Edin
@@ -144,7 +145,3 @@ def generate_train_test_data(test_index, KFOLD):
         csv_file_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         for row in test_lines:
             csv_file_writer.writerow(row)
-
-
-generate_ds_kfold_parts(5)
-generate_train_test_data(2, 5)

@@ -55,7 +55,7 @@ def dot_product_decode(Z):
 class GAE(nn.Module):
     def __init__(self, adj):
         super(GAE, self).__init__()
-        self.base_gcn = GraphConvSparse(args_kdiverse.ae_input_dim, args_kdiverse.ae_hidden1_dim, adj)
+        self.base_gcn = GraphConvSparse(len(data_generator.vocab_to_int) - 3, args_kdiverse.ae_hidden1_dim, adj)
         self.gcn_mean = GraphConvSparse(args_kdiverse.ae_hidden1_dim, args_kdiverse.ae_hidden2_dim, adj,
                                         activation=lambda x: x)
 
