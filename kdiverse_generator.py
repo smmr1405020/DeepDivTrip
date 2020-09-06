@@ -66,8 +66,6 @@ def generate_result(load_from_file,K):
 
     return
 
-generate_result(True,2)
-
 
 
 
