@@ -284,7 +284,6 @@ def get_training_raw_dict():
 
 
 training_data_dicts = get_training_raw_dict()
-
 POI_endpoints_dict_t = training_data_dicts[0]
 
 
@@ -362,6 +361,30 @@ def get_training_rawdata(batch_size=8):
 
 
 training_rawdata = get_training_rawdata()
+
+
+def get_ds_stats():
+    print("Dataset : "+dat_suffix[dat_ix])
+    print("No of POIs: ")
+    print(len(vocab_to_int) -3)
+
+    train_traj = 0
+    for k,v in training_data_dicts_vi[0].items():
+        train_traj += len(v)
+
+    test_traj = 0
+    for k,v in test_data_dicts_vi[0].items():
+        test_traj += len(v)
+
+    total_traj = train_traj + test_traj
+
+    pairs = len(list(training_data_dicts_vi[0].keys())) + len(list(test_data_dicts_vi[0].keys()))
+    print("No. of Traj >3: ")
+    print(total_traj)
+    print("Total sample pairs")
+    print(pairs)
+
+
 
 
 def get_training_data_for_KDiverse_Raw():
@@ -487,7 +510,7 @@ for i in range (len(poi_poi_distance_matrix)):
     for j in range(len(poi_poi_distance_matrix[i])):
         poi_poi_distance_matrix[i][j] = min(max_dist,poi_poi_distance_matrix[i][j])
 
-print(np.sum(poi_poi_distance_matrix != poi_poi_distance_matrix_old))
+#print(np.sum(poi_poi_distance_matrix != poi_poi_distance_matrix_old))
 
 #############################################################################################
 
@@ -623,3 +646,6 @@ def get_trajectory_dataset():
 
     return dataset_trajectory(all_traj_data_train, all_traj_data_train_seq), \
            dataset_trajectory(all_traj_data_train, all_traj_data_train_seq, backward=True)
+
+
+get_ds_stats()
