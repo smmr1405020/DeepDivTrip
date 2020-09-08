@@ -11,6 +11,11 @@ random.seed(1234567890)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def get_model_probs(input_seq):
+
+    for i in range(len(input_seq)):
+        if input_seq[i] is None:
+            input_seq[i] = 0
+
     input_seq_f = list(input_seq)
     input_seq_b = list(reversed(list(input_seq)))
 
@@ -44,7 +49,6 @@ def get_prob_in_idx(input_seq, I):
     :param I: index at which probability is going to be generated , F:(s->I-1) , B(e->I+1)
     :return: (vocab_size) sized numpy array
     """
-
     S = len(list(input_seq))
     output_prb_f, output_prb_b = get_model_probs(input_seq)
 
@@ -63,6 +67,10 @@ def get_traj_perplexity(input_seq):
     :param input_seq:
     :return: raw_prob --> HIGHER BETTER , perplexity --> LOWER IS BETTER
     """
+
+    if len(input_seq) == 0:
+        return 1000, 0.0
+
 
     output_prb_f, output_prb_b = get_model_probs(input_seq)
     fwd_perplexity = 0
@@ -153,6 +161,9 @@ def gibbs_sampling(barebone_seq, no_samples=150):
 
     def replacement(seq, sta_vec, idx):
         old_seq = seq.copy()
+
+        if len(seq) == 0 or idx >= len(sta_vec):
+            return seq , sta_vec
 
         final_prob, _ = get_prob_in_idx(seq, idx)
 
