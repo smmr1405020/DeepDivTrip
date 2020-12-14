@@ -86,11 +86,11 @@ with open("processed_data/" + embedding_name + '_train_set.csv', mode='r') as cs
 
     for row in csv_reader:
 
-        if (line_no == 0):
+        if line_no == 0:
             row0 = row.copy()
-        elif (line_no == 1):
+        elif line_no == 1:
             row1 = row.copy()
-        elif (line_no == 2):
+        elif line_no == 2:
             row2 = row.copy()
 
             curr_traj = [int(poi) for poi in row0]
@@ -105,15 +105,15 @@ with open("processed_data/" + embedding_name + '_train_set.csv', mode='r') as cs
             gotBefore = False
             all_traj_pos = -1
 
-            if (qu in query_dict_trajectory_train.keys()):
+            if qu in query_dict_trajectory_train.keys():
                 all_traj = query_dict_trajectory_train[qu]
                 for prev_traj_itr in range(len(all_traj)):
-                    if (isSame(all_traj[prev_traj_itr], curr_traj)):
+                    if isSame(all_traj[prev_traj_itr], curr_traj):
                         gotBefore = True
                         all_traj_pos = prev_traj_itr
                         break
 
-                if (gotBefore == False):
+                if not gotBefore:
 
                     all_traj.append(curr_traj)
                     query_dict_trajectory_train[qu] = all_traj
@@ -198,15 +198,15 @@ with open("processed_data/" + embedding_name + '_test_set.csv', mode='r') as csv
             gotBefore = False
             all_traj_pos = -1
 
-            if (qu in query_dict_trajectory_test.keys()):
+            if qu in query_dict_trajectory_test.keys():
                 all_traj = query_dict_trajectory_test[qu]
                 for prev_traj_itr in range(len(all_traj)):
-                    if (isSame(all_traj[prev_traj_itr], curr_traj)):
+                    if isSame(all_traj[prev_traj_itr], curr_traj):
                         gotBefore = True
                         all_traj_pos = prev_traj_itr
                         break
 
-                if (gotBefore == False):
+                if not gotBefore:
 
                     all_traj.append(curr_traj)
                     query_dict_trajectory_test[qu] = all_traj
@@ -259,7 +259,6 @@ with open("processed_data/" + embedding_name + '_test_set.csv', mode='r') as csv
 def get_training_raw_dict():
     q_tr = dict()
     for k, v in query_dict_trajectory_train.items():
-        GT_set = v
 
         GT_freq = query_dict_freq_train[k]
 
@@ -295,12 +294,13 @@ def get_test_raw_dict():
             v_new.append(v[i][0])
         q_u[k] = v_new
 
-    test_data_dicts = query_dict_trajectory_test, q_u
+    test_data_dicts = query_dict_trajectory_test, q_u, query_dict_freq_test
 
     return test_data_dicts
 
 
 test_data_dicts = get_test_raw_dict()
+
 
 ALL_POI_IDS_FREQ = dict()
 for k, v in POI_endpoints_dict_t.items():
@@ -326,8 +326,20 @@ for k, v in vocab_to_int.items():
     int_to_vocab[v] = k
 
 
-def convert_vocab_to_int(traj_dict):
+def convert_vocab_to_int(traj_dict, convert_values=True):
     traj_dict_new = dict()
+
+    if not convert_values:
+
+        for k, v in traj_dict.items():
+            str_k = str(k).split("-")
+            st_p = int(str_k[0])
+            en_p = int(str_k[1])
+            new_k = str(vocab_to_int[st_p]) + "-" + str(vocab_to_int[en_p])
+
+            traj_dict_new[new_k] = v
+
+        return traj_dict_new
 
     for k, v in traj_dict.items():
         st_p = v[0][0]
@@ -338,11 +350,23 @@ def convert_vocab_to_int(traj_dict):
             new_v_i = [vocab_to_int[poi] for poi in v[i]]
             new_v.append(new_v_i)
         traj_dict_new[new_k] = new_v
+
     return traj_dict_new
 
 
-training_data_dicts_vi = (convert_vocab_to_int(training_data_dicts[0]), training_data_dicts[1])
-test_data_dicts_vi = (convert_vocab_to_int(test_data_dicts[0]), test_data_dicts[1])
+training_data_dicts_vi = (convert_vocab_to_int(training_data_dicts[0]), convert_vocab_to_int(training_data_dicts[1],False))
+test_data_dicts_vi = (convert_vocab_to_int(test_data_dicts[0]), convert_vocab_to_int(test_data_dicts[1],False), convert_vocab_to_int(test_data_dicts[2],False))
+
+
+def get_all_test_routes():
+
+    all_test_routes = []
+
+    for k , v in test_data_dicts_vi[0].items():
+        for i in range(len(v)):
+            for j in range(test_data_dicts_vi[2][k][i]):
+                all_test_routes.append(v[i])
+    return all_test_routes
 
 
 def get_training_rawdata(batch_size=8):
@@ -364,16 +388,16 @@ training_rawdata = get_training_rawdata()
 
 
 def get_ds_stats():
-    print("Dataset : "+dat_suffix[dat_ix])
+    print("Dataset : " + dat_suffix[dat_ix])
     print("No of POIs: ")
-    print(len(vocab_to_int) -3)
+    print(len(vocab_to_int) - 3)
 
     train_traj = 0
-    for k,v in training_data_dicts_vi[0].items():
+    for k, v in training_data_dicts_vi[0].items():
         train_traj += len(v)
 
     test_traj = 0
-    for k,v in test_data_dicts_vi[0].items():
+    for k, v in test_data_dicts_vi[0].items():
         test_traj += len(v)
 
     total_traj = train_traj + test_traj
@@ -385,14 +409,11 @@ def get_ds_stats():
     print(pairs)
 
 
-
-
 def get_training_data_for_KDiverse_Raw():
     trainT = training_rawdata[0]
     # print(trainT)
 
     POI_endpoints_dict = {}
-
 
     for i in range(len(trainT)):
         for path_length in range(3, len(trainT[i]) + 1):
@@ -429,7 +450,6 @@ def get_training_data_for_KDiverse_Raw():
                             v_new.append(new_traj)
 
         POI_endpoints_dict[k] = v_new
-
 
     for k, v in POI_endpoints_dict.items():
         v_new = []
@@ -506,11 +526,12 @@ max_dist = 3 * poi_poi_distance_matrix_avg
 
 poi_poi_distance_matrix_old = poi_poi_distance_matrix.copy()
 
-for i in range (len(poi_poi_distance_matrix)):
+for i in range(len(poi_poi_distance_matrix)):
     for j in range(len(poi_poi_distance_matrix[i])):
-        poi_poi_distance_matrix[i][j] = min(max_dist,poi_poi_distance_matrix[i][j])
+        poi_poi_distance_matrix[i][j] = min(max_dist, poi_poi_distance_matrix[i][j])
 
-#print(np.sum(poi_poi_distance_matrix != poi_poi_distance_matrix_old))
+
+# print(np.sum(poi_poi_distance_matrix != poi_poi_distance_matrix_old))
 
 #############################################################################################
 
@@ -533,7 +554,6 @@ poi_poi_transition_matrix_train = POI_transition_matrix(training_data_dicts_vi[0
 
 expo_trans1 = np.log10(max(1, np.min(poi_poi_transition_matrix_train)))
 expo_trans2 = np.log10(np.max(poi_poi_transition_matrix_train))
-
 
 max_dist = np.max(poi_poi_distance_matrix)
 poi_poi_distance_matrix_train_gae = np.exp((max_dist - poi_poi_distance_matrix))
@@ -565,6 +585,7 @@ def gen_poi_poi_category_matrix():
 
 
 poi_poi_categories_train_gae = gen_poi_poi_category_matrix()
+
 
 ########################################################################################################
 
@@ -646,6 +667,3 @@ def get_trajectory_dataset():
 
     return dataset_trajectory(all_traj_data_train, all_traj_data_train_seq), \
            dataset_trajectory(all_traj_data_train, all_traj_data_train_seq, backward=True)
-
-
-get_ds_stats()

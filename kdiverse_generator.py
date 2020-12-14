@@ -4,18 +4,24 @@ import data_generator
 import graph_embedding_kdiv
 import lstm_model
 import gibbs_sampler
-
+import time
 
 np.random.seed(1234567890)
 
-def generate_result(load_from_file,K):
+
+def generate_result(load_from_file, K):
     graph_embedding_kdiv.get_POI_embeddings(load_from_file=load_from_file)
     lstm_model.get_forward_lstm_model(load_from_file=load_from_file)
     lstm_model.get_backward_lstm_model(load_from_file=load_from_file)
 
-    likability_score = []
+    total_score_curr_f1 = 0
+    total_score_curr_pf1 = 0
+    total_score_curr_edt = 0
+
+    total_traj_curr = 0
     count = 1
 
+    # st = time.time()
     for k, v in data_generator.test_data_dicts_vi[0].items():
 
         str_k = str(k).split("-")
@@ -53,20 +59,28 @@ def generate_result(load_from_file,K):
 
         print("{}/{}".format(count, len(data_generator.test_data_dicts_vi[0])))
         count += 1
-        # print([poi_start,poi_end])
-        # print(all_traj)
-        likability_score_curr = metric.likability_score(v, all_traj)
-        likability_score.append(likability_score_curr)
-        # print(likability_score_curr)
-        print("Avg. upto now: " + str(np.average(likability_score)))
+        print([poi_start, poi_end])
+        print(all_traj)
+        total_score_curr_f1 += metric.tot_f1_evaluation(v, data_generator.test_data_dicts_vi[2][k], all_traj)
+        total_score_curr_pf1 += metric.tot_pf1_evaluation(v, data_generator.test_data_dicts_vi[2][k], all_traj)
+        total_score_curr_edt += metric.tot_edt_evaluation(v, data_generator.test_data_dicts_vi[2][k], all_traj)
+
+        total_traj_curr += np.sum(data_generator.test_data_dicts_vi[2][k]) * len(all_traj)
+
+        avg_f1 = total_score_curr_f1 / total_traj_curr
+        avg_pf1 = total_score_curr_pf1 / total_traj_curr
+        avg_edt = total_score_curr_edt / total_traj_curr
+
+        print("Avg. upto now: F1: " + str(avg_f1) + " PF1: " + str(avg_pf1) + " EDT: " + str(avg_edt))
 
     print("\n")
     print("Final Score - With K = {}".format(K))
-    print(np.average(likability_score))
+    avg_f1 = total_score_curr_f1 / total_traj_curr
+    avg_pf1 = total_score_curr_pf1 / total_traj_curr
+    avg_edt = total_score_curr_edt / total_traj_curr
 
+    print("F1: " + str(avg_f1) + " PF1: " + str(avg_pf1) + " EDT: " + str(avg_edt))
+    # en = time.time()
+    # print(en-st)
+    # print((en-st)/count)
     return
-
-
-
-
-

@@ -10,8 +10,8 @@ random.seed(1234567890)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-def get_model_probs(input_seq):
 
+def get_model_probs(input_seq):
     for i in range(len(input_seq)):
         if input_seq[i] is None:
             input_seq[i] = 0
@@ -70,7 +70,6 @@ def get_traj_perplexity(input_seq):
 
     if len(input_seq) == 0:
         return 1000, 0.0
-
 
     output_prb_f, output_prb_b = get_model_probs(input_seq)
     fwd_perplexity = 0
@@ -163,7 +162,7 @@ def gibbs_sampling(barebone_seq, no_samples=150):
         old_seq = seq.copy()
 
         if len(seq) == 0 or idx >= len(sta_vec):
-            return seq , sta_vec
+            return seq, sta_vec
 
         final_prob, _ = get_prob_in_idx(seq, idx)
 

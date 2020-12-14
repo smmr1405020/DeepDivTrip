@@ -12,11 +12,12 @@ torch.manual_seed(1234567890)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+
 def preprocess_graph(adj, add_eye=True):
     for i in range(len(adj)):
         adj[i][i] = 0.0
 
-    if (add_eye == True):
+    if add_eye:
         adj_ = adj + np.eye(adj.shape[0])
     else:
         adj_ = adj
@@ -79,7 +80,7 @@ def train_GAE_rmsLoss(adj_matrix, add_eye=True):
     num_nodes = adj.shape[0]
     features = np.eye(num_nodes, dtype=np.float)
 
-    if add_eye == True:
+    if add_eye:
         adj_label = adj_train + np.eye(num_nodes)
     else:
         adj_label = adj_train
@@ -107,7 +108,7 @@ def train_GAE_rmsLoss(adj_matrix, add_eye=True):
 
         train_rms_loss = get_rms_loss(A_pred, adj_label)
 
-        if epoch % 20000 == 0 or epoch == args_kdiverse.ae_num_epoch-1:
+        if epoch % 20000 == 0 or epoch == args_kdiverse.ae_num_epoch - 1:
             print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(loss.item()),
                   "train_rms_loss = ", "{:.5f}".format(train_rms_loss),
                   "time=", "{:.5f}".format(time.time() - t))
@@ -136,11 +137,9 @@ def train_GAE_BCELoss(adj_matrix):
 
     model = GAE(adj_norm).to(device)
 
-
     optimizer = torch.optim.Adadelta(model.parameters(), lr=args_kdiverse.ae_learning_rate)
 
     for epoch in range(args_kdiverse.ae_num_epoch):
-        t = time.time()
         optimizer.zero_grad()
 
         _, A_pred = model(features)
@@ -148,7 +147,7 @@ def train_GAE_BCELoss(adj_matrix):
         loss.backward()
         optimizer.step()
 
-        if epoch % 5000 == 0 or epoch == args_kdiverse.ae_num_epoch - 1:
+        if epoch % 500 == 0 or epoch == args_kdiverse.ae_num_epoch - 1:
             print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(loss.item()))
 
     print("\n\n")
@@ -191,4 +190,4 @@ def get_POI_embeddings(load_from_file=False):
     Zb = np.load("model_files/POI_embedding_" + data_generator.dat_suffix[data_generator.dat_ix] + ".npy")
     return Zb
 
-#get_POI_embeddings(load_from_file=False)
+# get_POI_embeddings(load_from_file=False)

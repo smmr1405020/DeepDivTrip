@@ -7,11 +7,11 @@ import data_generator
 import graph_embedding_kdiv
 import numpy as np
 
-
 torch.manual_seed(1234567890)
 np.random.seed(1234567890)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 
 class TrajPredictor(nn.Module):
     def __init__(self, pretrained_node_embeddings, hidden_size):
@@ -57,10 +57,10 @@ def loss_fn(model, pred, target):
 
 
 def print_all(model, backward_model):
-    if backward_model == False:
+    if not backward_model:
         tr_s, _ = data_generator.get_trajectory_dataset()
     else:
-        _,  tr_s = data_generator.get_trajectory_dataset()
+        _, tr_s = data_generator.get_trajectory_dataset()
 
     dataset_trajectory = tr_s
 
@@ -86,16 +86,15 @@ def print_all(model, backward_model):
         print("\n")
 
 
-
 def train(model, optimizer, loss_fn, epochs=100, backward_model=False):
     train_loss_min = 100000.0
     for epoch in range(epochs):
         training_loss = 0.0
 
-        if backward_model == False:
+        if not backward_model:
             tr_s, _ = data_generator.get_trajectory_dataset()
         else:
-             _, tr_s = data_generator.get_trajectory_dataset()
+            _, tr_s = data_generator.get_trajectory_dataset()
 
         model.train()
 
@@ -123,13 +122,14 @@ def train(model, optimizer, loss_fn, epochs=100, backward_model=False):
                 torch.save(model.state_dict(),
                            "model_files/LSTM_net_1_b_" + data_generator.dat_suffix[data_generator.dat_ix])
 
-        if epoch % 100 == 0 or epoch == epochs -1:
+        if epoch % 10 == 0 or epoch == epochs - 1:
             print('Epoch: {}, Loss: {:.3f}'.format(epoch, training_loss))
+
 
 def get_forward_lstm_model(load_from_file=True):
     pretrained_embeddings = graph_embedding_kdiv.get_POI_embeddings(load_from_file=True)
     pretrained_embeddings = torch.FloatTensor(pretrained_embeddings).to(device)
-    if (load_from_file == False):
+    if not load_from_file:
         trajpredictor_forward = TrajPredictor(pretrained_embeddings, args_kdiverse.lstm_model_hidden_size).to(device)
         optimizer_forward = optim.Adam(trajpredictor_forward.parameters(), lr=0.001)
         print("\nForward")
@@ -145,7 +145,7 @@ def get_forward_lstm_model(load_from_file=True):
 def get_backward_lstm_model(load_from_file=True):
     pretrained_embeddings = graph_embedding_kdiv.get_POI_embeddings(load_from_file=True)
     pretrained_embeddings = torch.FloatTensor(pretrained_embeddings).to(device)
-    if (load_from_file == False):
+    if not load_from_file:
         trajpredictor_backward = TrajPredictor(pretrained_embeddings, args_kdiverse.lstm_model_hidden_size).to(device)
         optimizer_backward = optim.Adam(trajpredictor_backward.parameters(), lr=0.001)
         print("\nBackward")
@@ -156,7 +156,3 @@ def get_backward_lstm_model(load_from_file=True):
     backward_lstm_model.load_state_dict(bwd_model_state_dict)
 
     return backward_lstm_model
-
-
-# get_forward_lstm_model(load_from_file=False)
-# get_backward_lstm_model(load_from_file=False)
