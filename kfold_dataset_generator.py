@@ -16,6 +16,7 @@ embedding_name = dat_suffix[dat_ix]
 poi_name = "poi-" + dat_suffix[dat_ix] + ".csv"  # Edin
 tra_name = "traj-" + dat_suffix[dat_ix] + ".csv"
 
+print('To Train', dat_suffix[dat_ix])
 # =============================== data load ====================================== #
 op_tdata = open('origin_data/' + poi_name, 'r')
 ot_tdata = open('origin_data/' + tra_name, 'r')

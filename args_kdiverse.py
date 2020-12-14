@@ -1,4 +1,4 @@
-dataset_index = 2
+dataset_index = 3
 
 ae_hidden1_dim = 12
 ae_hidden2_dim = 4
