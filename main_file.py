@@ -1,5 +1,5 @@
 import args_kdiverse
-args_kdiverse.dataset_index = 2
+args_kdiverse.dataset_index = 7
 
 import kfold_dataset_generator
 kfold_dataset_generator.generate_ds_kfold_parts(5)
