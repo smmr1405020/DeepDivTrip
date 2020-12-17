@@ -201,3 +201,19 @@ def tot_edt_evaluation(GT_set, GT_freq, recommended_set):
             total_score += calc_EDT(GT_set[i], recommended_set[j]) * GT_freq[i]
 
     return total_score
+
+
+def coverage_iou(GT_set, rec_set):
+    total_gt_set = set()
+
+    for route in GT_set:
+        total_gt_set = total_gt_set | set(route[1:-1])
+
+    total_rec_set = set()
+
+    for route in rec_set:
+        total_rec_set = total_rec_set | set(route[1:-1])
+
+    ratio = len(total_gt_set & total_rec_set) / len(total_gt_set | total_rec_set)
+
+    return ratio
