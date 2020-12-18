@@ -217,3 +217,13 @@ def coverage_iou(GT_set, rec_set):
     ratio = len(total_gt_set & total_rec_set) / len(total_gt_set | total_rec_set)
 
     return ratio
+
+def intra_F1(set):
+    div_scores = []
+    for i in range(len(set)):
+        for j in range(i+1,len(set)):
+            div_scores.append(1-calc_F1(set[i],set[j]))
+
+    return np.average(np.array(div_scores))
+
+

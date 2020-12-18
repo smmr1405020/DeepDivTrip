@@ -19,6 +19,7 @@ def generate_result(load_from_file, K):
     total_score_curr_edt = 0
 
     all_iou_scores = []
+    all_intra_f1_scores = []
 
     total_traj_curr = 0
     count = 1
@@ -68,20 +69,23 @@ def generate_result(load_from_file, K):
         total_traj_curr += np.sum(data_generator.test_data_dicts_vi[2][k]) * len(all_traj)
 
         all_iou_scores.append(metric.coverage_iou(v, all_traj))
+        all_intra_f1_scores.append(metric.intra_F1(all_traj))
 
         avg_f1 = total_score_curr_f1 / total_traj_curr
         avg_pf1 = total_score_curr_pf1 / total_traj_curr
         avg_iou = np.average(np.array(all_iou_scores))
+        avg_intra_f1 =np.average(np.array(all_intra_f1_scores))
 
-        print("Avg. upto now: F1: " + str(avg_f1) + " PF1: " + str(avg_pf1) + " IOU: " + str(avg_iou))
+        print("Avg. upto now: F1: " + str(avg_f1) + " PF1: " + str(avg_pf1) + " IOU: " + str(avg_iou) + " IF1: " + str(avg_intra_f1))
 
     print("\n")
     print("Final Score - With K = {}".format(K))
     avg_f1 = total_score_curr_f1 / total_traj_curr
     avg_pf1 = total_score_curr_pf1 / total_traj_curr
     avg_iou = np.average(np.array(all_iou_scores))
+    avg_intra_f1 = np.average(np.array(all_intra_f1_scores))
 
-    print("F1: " + str(avg_f1) + " PF1: " + str(avg_pf1) + " IOU: " + str(avg_iou))
+    print("F1: " + str(avg_f1) + " PF1: " + str(avg_pf1) + " IOU: " + str(avg_iou) + " IF1: " + str(avg_intra_f1))
 
     # en = time.time()
     # print(en-st)
