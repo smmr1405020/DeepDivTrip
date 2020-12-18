@@ -22,6 +22,8 @@ op_tdata = open('origin_data/' + poi_name, 'r')
 ot_tdata = open('origin_data/' + tra_name, 'r')
 Trajectory = []
 
+mytest_index = 1
+
 for line in ot_tdata.readlines():
     lineArr = line.split(',')
     temp_line = list()
@@ -122,6 +124,10 @@ def generate_ds_kfold_parts(KFOLD):
 
 
 def generate_train_test_data(test_index, KFOLD):
+
+    global mytest_index
+    mytest_index = test_index
+
     train_lines = []
     for i in range(1, KFOLD + 1):
         if i == test_index:
